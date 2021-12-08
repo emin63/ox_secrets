@@ -29,6 +29,11 @@ class SecretServer:
         raise NotImplementedError
 
     @classmethod
+    def clear_cache(cls):
+        "Clear the cache (i.e., forget all secrets)."
+        cls._cache = {}
+
+    @classmethod
     def get_secret(cls, name, category='root'):
         """Lookup secret with given name and return it.
 

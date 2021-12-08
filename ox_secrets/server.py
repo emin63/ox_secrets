@@ -47,3 +47,11 @@ def get_secret(name: str, category: str = 'root',
         server = get_server()
     result = server.get_secret(name, category)
     return result
+
+
+def forget_secrets(server: common.SecretServer = None) -> str:
+    """Forget all secrets.
+    """
+    if server is None:
+        server = get_server()
+    server.clear_cache()

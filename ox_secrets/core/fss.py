@@ -18,7 +18,7 @@ class FileSecretServer(common.SecretServer):
     """
 
     @classmethod
-    def load_secrets_file(cls, filename=None):
+    def load_secrets_file(cls, filename=None, encoding='utf8'):
         """Load secrets file from given filename.
 
         :param filename=None:    Optional filename for secrets. This
@@ -35,7 +35,7 @@ class FileSecretServer(common.SecretServer):
             filename = os.environ.get(
                 'OX_SECRETS_FILE', settings.OX_SECRETS_FILE)
         logging.warning('Opening secrets file "%s"', filename)
-        with open(filename, 'r') as sfd:
+        with open(filename, 'r', encoding=encoding) as sfd:
             reader = csv.DictReader(sfd)
             with cls._lock:
                 for line in reader:

@@ -16,6 +16,7 @@ example_name,root,super_secret,example secret
 
 >>> from ox_secrets import settings, server as oss
 >>> oss.settings.OX_SECRETS_FILE = fn # default is ~/.ox_secrets.csv
+>>> oss.forget_secrets()  # Clear it to make sure we start fresh
 >>> oss.get_secret('example_name')
 'super_secret'
 
@@ -25,4 +26,4 @@ Now cleanup
 
 """
 
-VERSION = '0.1.0'
+VERSION = '0.1.1'
