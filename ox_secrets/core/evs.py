@@ -15,6 +15,10 @@ from ox_secrets.core import common
 class EnvVarSecretServer(common.SecretServer):
     """Class to handle getting secrets from env variables.
 
+Most of the other secret servers will check the environment for
+a secret first by default. This class is mainly useful if
+you *ONLY* want to get secrets from the environment variables.
+
 The following illustrates example usage:
 
 >>> import os

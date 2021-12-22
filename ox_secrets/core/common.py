@@ -13,6 +13,7 @@ class SecretServer:
     """Class to handle gettting secrets.
     """
 
+    _env_var_prefix = 'OX_SECRETS'
     _lock = threading.Lock()  # Used to lock access to _cache
     _cache = {}
 
@@ -34,7 +35,34 @@ class SecretServer:
         cls._cache = {}
 
     @classmethod
-    def get_secret(cls, name, category='root'):
+    def make_env_var_key(cls, name: str, category: str):
+        """Create key to lookup environment variable for given name/category.
+        """
+
+        key = f'{cls._env_var_prefix}_{category}_{name}'.upper()
+        return key
+
+    @classmethod
+    def secret_from_env(cls, name: str, category: str, allow_env: bool):
+        """Try to extract secret from environment variable.
+
+        :param name:  String name of secret.
+
+        :param category:  String category.
+
+        :param allow_env:  If False, return None.
+        """
+        if not allow_env:
+            logging.debug('allow_env is false so not checking env')
+            return None
+        key = cls.make_env_var_key(name, category)
+        result = os.environ.get(key, None)
+        if result is not None:
+            logging.info('Secret extracted from env var "%s"', key)
+        return result
+
+    @classmethod
+    def get_secret(cls, name, category='root', allow_env=True):
         """Lookup secret with given name and return it.
 
         :param name:     String name of secret to lookup.
@@ -50,10 +78,8 @@ class SecretServer:
         PURPOSE:   Simple way to lookup secrets.
 
         """
-        key = '%s/%s' % (category if category is not None else '', name)
-        result = os.environ.get(key, None)
+        result = cls.secret_from_env(name, category, allow_env)
         if result is not None:
-            logging.info('Secret extracted from env var "%s"', key)
             return result
         if not cls._cache:
             cls.load_cache()

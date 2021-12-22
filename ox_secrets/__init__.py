@@ -20,10 +20,17 @@ example_name,root,super_secret,example secret
 >>> oss.get_secret('example_name')
 'super_secret'
 
+You can also puts secrets into the environment variables:
+
+>>> os.environ['OX_SECRETS_ROOT_EXAMPLE_NAME'] = 'other'
+>>> oss.get_secret('example_name')
+'other'
+
+
 Now cleanup
 
 >>> os.remove(fn)
 
 """
 
-VERSION = '0.1.1'
+VERSION = '0.1.2'
