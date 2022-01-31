@@ -45,7 +45,8 @@ class AWSSecretServer(common.SecretServer):
         
     @classmethod
     def load_cache(cls, name: typing.Optional[str] = None,
-                   category: typing.Optional[str] = None):
+                   category: typing.Optional[str] = None,
+                   loader_params: typing.Optional[dict] = None):
         """Load secrets and cache them from back-end store.
 
         :param name:  String name of secret desired. If this is None, then
@@ -61,9 +62,13 @@ class AWSSecretServer(common.SecretServer):
                   Sub-classes must implement.
 
         """
-        data = cls.load_secret_from_aws(secret_id=category)
+        loader_params = loader_params if loader_params is not None else {}
+        data = cls.load_secret_from_aws(secret_id=category, **loader_params)
         assert isinstance(data, dict)
         with cls._lock:
-            cls._cache[category] = data
+            cdict = cls._cache.get(category, {})
+            if not cdict:
+                cls._cache[category] = cdict
+            cdict.update(data)
 
         

@@ -47,8 +47,10 @@ class FileSecretServer(common.SecretServer):
 
     @classmethod
     def load_cache(cls, name: typing.Optional[str] = None,
-                   category: typing.Optional[str] = None):
+                   category: typing.Optional[str] = None,
+                   loader_params: typing.Optional[dict] = None):        
         "Implement loading cache from a file."
+        loader_params = loader_params if loader_params is not None else {}
         logging.debug('Ignoring name=%s/category=%s for %s', name,
                       category, cls.__name__)
-        return cls.load_secrets_file()
+        return cls.load_secrets_file(**loader_params)

@@ -62,6 +62,9 @@ The following illustrates example usage:
 
     @classmethod
     def load_cache(cls, name: typing.Optional[str] = None,
-                   category: typing.Optional[str] = None):
+                   category: typing.Optional[str] = None,
+                   loader_params: typing.Optional[dict] = None):
         "Implement loading cache from a file."
+        if loader_params:
+            logging.warning('Ignoring loader_params in %s', cls.__name__)
         return cls.load_secrets_data()
