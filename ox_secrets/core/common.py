@@ -7,6 +7,7 @@ This module provides a common core for secret servers.
 import logging
 import os
 import threading
+import typing
 
 
 class SecretServer:
@@ -18,8 +19,18 @@ class SecretServer:
     _cache = {}
 
     @classmethod
-    def load_cache(cls):
+    def load_cache(cls, name: typing.Optional[str] = None,
+                   category: typing.Optional[str] = None):
         """Load secrets and cache them from back-end store.
+
+        :param name:  String name of secret desired. Some back-ends can load
+                      the cache for all secrets at once while others require
+                      the name and/or category.
+
+        :param category:  String name of secret desired. Some back-ends can
+                          load the cache for all secrets at once while others 
+                          require the name and/or category.
+
 
         ~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-
 
@@ -62,12 +73,13 @@ class SecretServer:
         return result
 
     @classmethod
-    def get_secret(cls, name, category='root', allow_env=True):
+    def get_secret(cls, name: str, category: str = 'root',
+                   allow_env=True) -> str:
         """Lookup secret with given name and return it.
 
         :param name:     String name of secret to lookup.
 
-        :param category=None:  Optional string category for secret
+        :param category='root:  Optional string category for secret
 
         ~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-
 
@@ -82,9 +94,17 @@ class SecretServer:
         if result is not None:
             return result
         if not cls._cache:
-            cls.load_cache()
+            cls.load_cache(name=name, category=category)
         with cls._lock:  # get the lock since we are going to modify cache
             cdict = cls._cache.get(category, {})
             result = cdict[name]
 
         return result
+
+    @classmethod
+    def list_secret_names(cls, category: str) -> typing.List[str]:
+        "Return list of secret names for given category."
+
+        with cls._lock:  # get the lock to prevent modification while we look
+            cdict = cls._cache.get(category, [])
+            return list(cdict)

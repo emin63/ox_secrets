@@ -4,7 +4,7 @@ This module provides a secret server using environment variables
 This is helpful for local testing and very simple operation.
 """
 
-
+import typing
 import logging
 import os
 import re
@@ -61,6 +61,7 @@ The following illustrates example usage:
                 cls._cache[category][secname] = value
 
     @classmethod
-    def load_cache(cls):
+    def load_cache(cls, name: typing.Optional[str] = None,
+                   category: typing.Optional[str] = None):
         "Implement loading cache from a file."
         return cls.load_secrets_data()

@@ -2,23 +2,32 @@
 """
 
 import os
+import typing
 
 from ox_secrets import settings
-from ox_secrets.core import common, fss
+from ox_secrets.core import common, fss, evs
 
 
-def get_server() -> common.SecretServer:
+def get_server(mode: typing.Optional[str] = None) -> common.SecretServer:
     """Get the default secret server.
 
-You can set the OX_SECRETS_MODE environment variable or the
-ox_secrets.settings.OX_SECRETS_MODE python variable to be a string
-indicating the type of server you want to use.
+    :param mode:  Optional string mode specifying secret server to get. If
+                  None, then we try OX_SECRETS_MODE from env and then
+                  settings.OX_SECRETS_MODE.
 
     """
-    mode = os.environ.get('OX_SECRETS_MODE', settings.OX_SECRETS_MODE)
+    if not mode:
+        mode = os.environ.get('OX_SECRETS_MODE', settings.OX_SECRETS_MODE)
     mode = mode.lower()
     if mode in ['fss', 'file']:
         return fss.FileSecretServer
+    if mode in ['evs', 'env']:
+        return evs.EnvVarSecretServer
+    if mode == 'aws':
+        # delayed import so boto3 does not need to be installed if
+        # the aws secret server is never used
+        from ox_secrets.core import aws
+        return aws.AWSSecretServer
     raise ValueError('Invalid secret server mode "%s"' % mode)
 
 

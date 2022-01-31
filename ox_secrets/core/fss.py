@@ -8,6 +8,7 @@ This is helpful for local testing and very simple operation.
 import logging
 import csv
 import os
+import typing
 
 from ox_secrets import settings
 from ox_secrets.core import common
@@ -45,6 +46,9 @@ class FileSecretServer(common.SecretServer):
                         'value']
 
     @classmethod
-    def load_cache(cls):
+    def load_cache(cls, name: typing.Optional[str] = None,
+                   category: typing.Optional[str] = None):
         "Implement loading cache from a file."
+        logging.debug('Ignoring name=%s/category=%s for %s', name,
+                      category, cls.__name__)
         return cls.load_secrets_file()
