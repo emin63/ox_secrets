@@ -75,16 +75,17 @@ class SecretServer:
 
     @classmethod
     def get_secret(cls, name: str, category: str = 'root',
-                   allow_env=True, loader_params: typing.Optional[dict]) -> str:
+                   allow_env: bool = True,
+                   loader_params: typing.Optional[dict] = None) -> str:
         """Lookup secret with given name and return it.
 
         :param name:     String name of secret to lookup.
 
         :param category='root:  Optional string category for secret
 
-        :param loader_params=None:  Optional dict of parameters which gets
-                                    passed to load_cache for back-end. This allows
-                                    a way to pass back-end specific info if desired.
+        :param loader_params: Optional dict of parameters which gets
+                              passed to load_cache for back-end. This allows
+                              a way to pass back-end specific info if desired.
 
         ~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-
 
@@ -99,7 +100,8 @@ class SecretServer:
         if result is not None:
             return result
         if not cls._cache:
-            cls.load_cache(name=name, category=category, loader_params=loader_params)
+            cls.load_cache(name=name, category=category,
+                           loader_params=loader_params)
         with cls._lock:  # get the lock since we are going to modify cache
             cdict = cls._cache.get(category, {})
             result = cdict[name]
