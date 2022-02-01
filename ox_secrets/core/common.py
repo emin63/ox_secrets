@@ -38,6 +38,8 @@ class SecretServer:
         PURPOSE:  Fill cls._cache with data from secrets store.
                   Sub-classes must implement.
 
+        *IMPORTANT:  Sub-classes should use `with cls._lock` inside when
+                     overriding load_cache to be thread safe.
         """
         raise NotImplementedError
 
@@ -76,12 +78,18 @@ class SecretServer:
     @classmethod
     def get_secret(cls, name: str, category: str = 'root',
                    allow_env: bool = True,
+                   allow_update: bool = True,
                    loader_params: typing.Optional[dict] = None) -> str:
         """Lookup secret with given name and return it.
 
         :param name:     String name of secret to lookup.
 
-        :param category='root:  Optional string category for secret
+        :param category='root':  Optional string category for secret
+
+        :param allow_env=True:  Whether to allow checking env var first.
+
+        :param allow_update=True:  Whether to loading cache if secret not
+                                   found.
 
         :param loader_params: Optional dict of parameters which gets
                               passed to load_cache for back-end. This allows
@@ -99,14 +107,22 @@ class SecretServer:
         result = cls.secret_from_env(name, category, allow_env)
         if result is not None:
             return result
-        if not cls._cache:
+        with cls._lock:  # get the lock to prevent multiple read/write cache
+            cdict = cls._cache.get(category, None)
+            if cdict is not None:
+                return cdict[name]
+        assert cdict is None  # must be here if category not in cache
+        if allow_update:
             cls.load_cache(name=name, category=category,
                            loader_params=loader_params)
-        with cls._lock:  # get the lock since we are going to modify cache
-            cdict = cls._cache.get(category, {})
-            result = cdict[name]
-
-        return result
+            return cls.get_secret(
+                name, category,
+                allow_env=False,  # already tried env, so don't retry
+                allow_update=False,  # don't get into infinite loop
+                loader_params=loader_params)
+        logging.error('Unable to find category %s for secret manager class %s',
+                      category, cls.__name__)
+        raise KeyError(category)
 
     @classmethod
     def list_secret_names(cls, category: str) -> typing.List[str]:

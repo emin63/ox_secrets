@@ -67,4 +67,5 @@ The following illustrates example usage:
         "Implement loading cache from a file."
         if loader_params:
             logging.warning('Ignoring loader_params in %s', cls.__name__)
-        return cls.load_secrets_data()
+        with cls._lock:
+            return cls.load_secrets_data()
