@@ -3,7 +3,6 @@
 This module provides a common core for secret servers.
 """
 
-
 import logging
 import os
 import threading
@@ -131,3 +130,88 @@ class SecretServer:
         with cls._lock:  # get the lock to prevent modification while we look
             cdict = cls._cache.get(category, [])
             return list(cdict)
+
+
+class SecretInfo:
+    """Class to hold information about a secret and convert to/from string.
+
+The SecretInfo class is useful as a way to hold information about a
+secret in a way which can be serialized to/from a string.
+
+The following illustrates example usage:
+
+>>> import tempfile, os                  # first do some boilerplate
+>>> from ox_secrets.core import common   # imports of various things
+>>> from ox_secrets import server
+>>> tfile = tempfile.mktemp(suffix='.csv')  # setup a temp file
+>>> open(tfile, 'wb').write(                # and write example secrets
+... '''name,category,value,notes            # with an ususual encoding
+... cool,thing,here,example'''.encode('UTF-32'))
+352
+>>> sstr = (  # create a secret serialized as a string
+...   f'name=cool:category=thing:mode=fss:filename={tfile}:encoding=utf32')
+>>> sec = common.SecretInfo.from_str(sstr)  # parse the string
+>>> sec  # show pretty representation  doctest: +ELLPISIS
+SecretInfo(name='cool',
+  category='thing',
+  mode='fss',
+  filename='....csv',
+  encoding='utf32')
+>>> sstr == str(sec)  # verify we can convert back to string
+True
+>>> server.get_server(mode=sec.mode).get_secret(  # read secret
+...     name=sec.name, category=sec.category, loader_params=sec.loader_params)
+'here'
+>>> os.remove(tfile)  # remove temp file
+
+    """
+
+    def __init__(self, name, category, mode=None, **kwargs):
+        self.name = name
+        self.category = category
+        self.mode = mode
+        self.loader_params = kwargs
+
+    @classmethod
+    def from_str(cls, my_str):
+        """Convert a string representation of the secret to this class.
+        
+        :param my_str:   String representation of a secret.
+        
+        ~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-
+        
+        :return:  Instance of class
+        
+        """
+        kwargs = {}
+        data = my_str.split(':')
+        for item in data:
+            key, value = item.split('=')
+            kwargs[key.strip()] = value.strip()
+        result = cls(**kwargs)
+        return result
+
+    def make_info(self):
+        """Return list of name value pairs for data in self.
+        """
+        info = [('name', self.name), ('category', self.category)]
+        if self.mode is not None:
+            info.append(('mode', self.mode))
+        for name, value in self.loader_params.items():
+            info.append((name, value))
+        return info
+    
+    def pretty(self):
+        "Return pretty string reprsentation."
+        info = self.make_info()
+        arg_info = ",\n  ".join([f'{k}={repr(v)}' for k, v in info])
+        return self.__class__.__name__ + f'({arg_info})'
+
+    def __str__(self):
+        info = self.make_info()
+        return ':'.join([f'{k}={v}' for k, v in info])
+
+    def __repr__(self):
+        return self.pretty()
+    
+        

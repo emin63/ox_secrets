@@ -23,3 +23,6 @@ Currently, the following back ends are supported:
       override, this mode **ONLY** looks at environment variables.
 
 -  ``aws``: Uses the AWS Secret Manager.
+
+The main secret server can merge and cache secrets from multiple
+back-ends in case your secrets are split across various places.
