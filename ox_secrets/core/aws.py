@@ -30,13 +30,13 @@ class AWSSecretServer(common.SecretServer):
     @classmethod
     def load_secret_from_aws(
             cls, secret_id: str, profile_name: typing.Optional[
-                str] = None) -> typing.Dict[str, str]:
+                str] = None, **kwargs) -> typing.Dict[str, str]:
         if profile_name is None:
             profile_name = settings.OX_SECRETS_AWS_PROFILE_NAME
         logging.warning(
             'Connecting to boto3 for profile %s to read secrets for %s',
             profile_name, secret_id)
-        session = boto3.Session(profile_name=profile_name)
+        session = boto3.Session(profile_name=profile_name, **kwargs)
         client = session.client(service_name='secretsmanager')
         get_secret_value_response = client.get_secret_value(SecretId=secret_id)
         secret_data = get_secret_value_response['SecretString']
