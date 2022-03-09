@@ -24,6 +24,6 @@ OX_SECRETS_AWS_PROFILE_NAME = None
 # automatically have the all categories starting with 'prod/' replaced
 # with 'test/' in calls to get_secret.
 OX_SECRETS_CATEGORY_REGEXP = os.environ.get(
-    'OX_SECRETS_CATEGORY_RE', None)
+    'OX_SECRETS_CATEGORY_REGEXP', None)
 OX_SECRETS_CATEGORY_REPLACE = os.environ.get(
     'OX_SECRETS_CATEGORY_REPLACE', None)
