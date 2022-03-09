@@ -7,6 +7,9 @@ import logging
 import os
 import threading
 import typing
+import re
+
+from ox_secrets import settings
 
 
 class SecretServer:
@@ -103,6 +106,7 @@ class SecretServer:
         PURPOSE:   Simple way to lookup secrets.
 
         """
+        category = cls.maybe_replace_category(category)
         result = cls.secret_from_env(name, category, allow_env)
         if result is not None:
             return result
@@ -123,6 +127,18 @@ class SecretServer:
                       category, cls.__name__)
         raise KeyError(category)
 
+    @staticmethod
+    def maybe_replace_category(category):
+        """Replace input based on OX_SECRETS_CATEGORY_REGEXP.
+
+Meant to be called by get_secret.
+        """
+        if settings.OX_SECRETS_CATEGORY_REGEXP:
+            return re.sub(settings.OX_SECRETS_CATEGORY_REGEXP,
+                          settings.OX_SECRETS_CATEGORY_REPLACE, category)
+        return category
+                
+        
     @classmethod
     def list_secret_names(cls, category: str) -> typing.List[str]:
         "Return list of secret names for given category."
