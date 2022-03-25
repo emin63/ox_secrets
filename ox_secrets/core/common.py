@@ -81,7 +81,8 @@ class SecretServer:
     def get_secret(cls, name: str, category: str = 'root',
                    allow_env: bool = True,
                    allow_update: bool = True,
-                   loader_params: typing.Optional[dict] = None) -> str:
+                   loader_params: typing.Optional[dict] = None,
+                   service_name: typing.Optional[str] = None):
         """Lookup secret with given name and return it.
 
         :param name:     String name of secret to lookup.
@@ -96,6 +97,10 @@ class SecretServer:
         :param loader_params: Optional dict of parameters which gets
                               passed to load_cache for back-end. This allows
                               a way to pass back-end specific info if desired.
+
+        :param service_name: Optional string to add as loader_params['service_name']. The
+                             service_name is used by the AWS secret manager and parameter
+                             store and nice to be able to specify directly.
 
         ~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-
 
@@ -116,6 +121,10 @@ class SecretServer:
                 return cdict[name]
         assert cdict is None  # must be here if category not in cache
         if allow_update:
+            if service_name is not None:
+                if loader_params is None:
+                    loader_params = {}
+                loader_params['service_name'] = service_name
             cls.load_cache(name=name, category=category,
                            loader_params=loader_params)
             return cls.get_secret(

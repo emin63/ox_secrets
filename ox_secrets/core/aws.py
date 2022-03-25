@@ -36,11 +36,22 @@ class AWSSecretServer(common.SecretServer):
         logging.warning(
             'Connecting to boto3 for profile %s to read secrets for %s',
             profile_name, secret_id)
+        service_name = kwargs.pop('service_name', 'secretsmanager')        
         session = boto3.Session(profile_name=profile_name, **kwargs)
-        client = session.client(service_name='secretsmanager')
-        get_secret_value_response = client.get_secret_value(SecretId=secret_id)
-        secret_data = get_secret_value_response['SecretString']
-        secret_dict = json.loads(secret_data)
+        client = session.client(service_name=service_name)
+        if service_name == 'secretsmanager':
+            get_secret_value_response = client.get_secret_value(SecretId=secret_id)
+            secret_data = get_secret_value_response['SecretString']
+            secret_dict = json.loads(secret_data)
+        elif service_name == 'ssm':
+            get_secret_value_response = client.get_parameter(Name=secret_id)
+            secret_data = get_secret_value_response['Parameter']['Value']
+            if secret_id[-5:].lower() == '.json':
+                secret_dict = json.loads(secret_data)
+            else:
+                secret_dict = {secret_id: secret_data}
+        else:
+            raise ValueError(f'Invalid service_name: {service_name}')
         return secret_dict
         
     @classmethod

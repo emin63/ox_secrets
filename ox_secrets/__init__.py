@@ -49,4 +49,4 @@ Now cleanup
 
 """
 
-VERSION = '0.3.5'
+VERSION = '0.3.6'

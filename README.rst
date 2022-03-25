@@ -22,7 +22,11 @@ Currently, the following back ends are supported:
    -  While other modes back ends can use environment variables to
       override, this mode **ONLY** looks at environment variables.
 
--  ``aws``: Uses the AWS Secret Manager.
+-  ``aws``: Uses the AWS Secret Manager or AWS Parameter Store
+
+   -  By default the ``aws`` back-end will use the AWS Secrets Manager.
+      If you want to use the parameter store instead, provide
+      ``service_name='ssm'``.
 
 The main secret server can merge and cache secrets from multiple
 back-ends in case your secrets are split across various places.
