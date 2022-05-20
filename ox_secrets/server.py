@@ -32,15 +32,18 @@ def get_server(mode: typing.Optional[str] = None) -> common.SecretServer:
 
 
 def get_secret(name: str, category: str = 'root',
-               server: common.SecretServer = None) -> str:
+               server: typing.Optional[
+                   typing.Union[str, common.SecretServer]] = None) -> str:
     """Return desired secret.
 
     :param name: str: Name of secret to get
 
     :param category: str ='root': Category of secret.
 
-    :param server=None:  Optional server to use. If not provided, then
-                         we call get_server() to get it.
+    :param server=None:  Optional server to use (either the class or
+                         string name for it such as 'fss' or 'aws'. If
+                         not provided, then we call get_server() to
+                         get it.
 
     ~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-
 
@@ -52,8 +55,8 @@ def get_secret(name: str, category: str = 'root',
               function that most applications need to call.
 
     """
-    if server is None:
-        server = get_server()
+    if server is None or isinstance(server, str):
+        server = get_server(mode=server)
     result = server.get_secret(name, category)
     return result
 

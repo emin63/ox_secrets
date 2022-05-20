@@ -24,6 +24,13 @@ example_pw,test/data,unsecret_test_pw,example secret test pw
 >>> oss.get_secret('example_name')
 'super_secret'
 
+Sometimes it is nice to be able to just pass a dictionary of
+credential information to get_secret:
+
+>>> creds = {'name': 'example_name', 'category': 'root', 'server': 'fss'}
+>>> oss.get_secret(**creds)
+'super_secret'
+
 You can also puts secrets into the environment variables:
 
 >>> os.environ['OX_SECRETS_ROOT_EXAMPLE_NAME'] = 'other'
@@ -49,4 +56,4 @@ Now cleanup
 
 """
 
-VERSION = '0.3.6'
+VERSION = '0.3.7'
