@@ -67,3 +67,26 @@ def forget_secrets(server: common.SecretServer = None) -> str:
     if server is None:
         server = get_server()
     server.clear_cache()
+
+
+def store_secrets(new_secret_dict: typing.Dict[str, str],
+                  category: str, server: typing.Optional[
+                      typing.Union[str, common.SecretServer]] = None,
+                  **storage_params):
+    """Store secrets to back-end
+
+    :param new_secret_dict:  Dictionary or name value pairs for secrets.
+
+    :param category:  String category for secrets to store.
+
+    :param server:  Secret server to use.
+
+    :param **storage_params:   Optional storage parameters for back-end.
+    ~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-
+
+    PURPOSE:  Store the secrets in new_secret_dict.
+
+    """
+    if server is None:
+        server = get_server()
+    server.store_secrets(new_secret_dict, category, **storage_params)

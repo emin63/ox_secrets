@@ -19,6 +19,12 @@ class SecretServer:
     _env_var_prefix = 'OX_SECRETS'
     _lock = threading.Lock()  # Used to lock access to _cache
     _cache = {}
+    _data_fields = (
+        ('name', 'Name of the secret.'),
+        ('category', 'Category the secret is in.'),
+        ('value', 'String value of the secret'),
+        ('notes', 'Optional notes about the secret.')
+        )
 
     @classmethod
     def load_cache(cls, name: typing.Optional[str] = None,
@@ -31,7 +37,7 @@ class SecretServer:
                       the name and/or category.
 
         :param category:  String name of secret desired. Some back-ends can
-                          load the cache for all secrets at once while others 
+                          load the cache for all secrets at once while others
                           require the name and/or category.
 
 
@@ -146,8 +152,8 @@ Meant to be called by get_secret.
             return re.sub(settings.OX_SECRETS_CATEGORY_REGEXP,
                           settings.OX_SECRETS_CATEGORY_REPLACE, category)
         return category
-                
-        
+
+
     @classmethod
     def list_secret_names(cls, category: str) -> typing.List[str]:
         "Return list of secret names for given category."
@@ -155,6 +161,23 @@ Meant to be called by get_secret.
         with cls._lock:  # get the lock to prevent modification while we look
             cdict = cls._cache.get(category, [])
             return list(cdict)
+
+    @classmethod
+    def store_secrets(cls, new_secret_dict: typing.Dict[str, str],
+                      category: str, **storage_params):
+        """Store secrets to back-end
+
+        :param new_secret_dict:  Dictionary or name value pairs for secrets.
+
+        :param category:  String category for secrets to store.
+
+        :param **storage_params:   Optional storage parameters for back-end.
+        ~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-
+
+        PURPOSE:  Store the secrets in new_secret_dict.
+
+        """
+        raise NotImplementedError
 
 
 class SecretInfo:
@@ -200,13 +223,13 @@ True
     @classmethod
     def from_str(cls, my_str):
         """Convert a string representation of the secret to this class.
-        
+
         :param my_str:   String representation of a secret.
-        
+
         ~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-
-        
+
         :return:  Instance of class
-        
+
         """
         kwargs = {}
         data = my_str.split(':')
@@ -225,7 +248,7 @@ True
         for name, value in self.loader_params.items():
             info.append((name, value))
         return info
-    
+
     def pretty(self):
         "Return pretty string reprsentation."
         info = self.make_info()
@@ -238,5 +261,3 @@ True
 
     def __repr__(self):
         return self.pretty()
-    
-        

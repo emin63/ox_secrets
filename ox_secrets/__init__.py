@@ -11,12 +11,14 @@ First we setup an example secrets file:
 ... ['name', 'category', 'value', 'notes'],
 ... ['example_name', 'root', 'super_secret', 'example secret'],
 ... ['example_pw', 'prod/data', 'super_secret_pw', 'example secret_pw'],
-... ['example_pw', 'test/data', 'unsecret_test_pw', 'example secret test pw']])
+... ['example_pw', 'test/data', 'unsecret_test_pw', 'example secret test pw'],
+... ['example_pw', 'alt', 'alt_unsecret_test_pw', 'alt secret test pw']])
 >>> print(open(fn).read().strip())
 name,category,value,notes
 example_name,root,super_secret,example secret
 example_pw,prod/data,super_secret_pw,example secret_pw
 example_pw,test/data,unsecret_test_pw,example secret test pw
+example_pw,alt,alt_unsecret_test_pw,alt secret test pw
 
 >>> from ox_secrets import settings, server as oss
 >>> oss.settings.OX_SECRETS_FILE = fn # default is ~/.ox_secrets.csv
@@ -37,7 +39,7 @@ You can also puts secrets into the environment variables:
 >>> oss.get_secret('example_name')
 'other'
 
-Finally, you can use the OX_SECRETS_CATEGORY_REGEXP and
+You can use the OX_SECRETS_CATEGORY_REGEXP and
 the OX_SECRETS_CATEGORY_REPLACE either in the settings file
 or environment variables (before starting python) to automatically
 switch from production to testing secrets:
@@ -50,10 +52,18 @@ switch from production to testing secrets:
 >>> oss.get_secret('example_pw', 'prod/data')
 'unsecret_test_pw'
 
+
+If desired, you can also store secrets (assuming
+you have appropriate permissions):
+
+>>> oss.store_secrets({'example_pw': 'foobar'}, category='alt')
+>>> oss.get_secret('example_pw', category='alt')
+'foobar'
+
 Now cleanup
 
 >>> os.remove(fn)
 
 """
 
-VERSION = '0.3.7'
+VERSION = '0.3.8'
