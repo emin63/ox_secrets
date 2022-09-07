@@ -87,6 +87,10 @@ class FileSecretServer(common.SecretServer):
         logging.warning('Opening secrets file "%s"', filename)
         data = []
         with cls._lock:
+            if not os.path.exists(filename):
+                logging.warning('Creating empty file for %s.', filename)
+                with open(filename, 'a', encoding='utf8') as sfd:
+                    pass  # this just creates an empty file if necessary
             with open(filename, 'r', encoding=encoding) as sfd:
                 reader = csv.DictReader(sfd)
                 for item in reader:
@@ -94,7 +98,6 @@ class FileSecretServer(common.SecretServer):
                             'category'] == category:
                         logging.info('Replacing old value for %s/%s',
                                      item['name'], item['category'])
-                        pass
                     else:
                         data.append(item)
             with open(filename, 'w', encoding=encoding) as sfd:

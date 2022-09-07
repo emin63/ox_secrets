@@ -28,7 +28,7 @@ def get_server(mode: typing.Optional[str] = None) -> common.SecretServer:
         # the aws secret server is never used
         from ox_secrets.core import aws
         return aws.AWSSecretServer
-    raise ValueError('Invalid secret server mode "%s"' % mode)
+    raise ValueError('Invalid secret server mode "{mode}"')
 
 
 def get_secret(name: str, category: str = 'root',

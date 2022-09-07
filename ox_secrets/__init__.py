@@ -64,6 +64,27 @@ Now cleanup
 
 >>> os.remove(fn)
 
+
+If you have an account with the appropriate permissions (e.g.,
+you may need to set the AWS_PROFILE environment variable to
+to such an account), you can also store secrets and parameters
+to aws.
+
+For example, you could do something like:
+
+    oss.get_server(mode='aws').store_secrets(
+        {'test_storage':'foobar'}, category=AWS_SECRET_ID)
+
+to store a secret to the existing secret with secret ID
+`AWS_SECRET_ID` on Amazon Web Services. You could also proide the
+`service_name='ssm'` argument if you wanted to use the parameter store
+instead of the secret store via something like:
+
+    oss.get_server(mode='aws').store_secrets(
+        {'test_storage':'foobar', category=AWS_PARAM_NAME,
+        service_name='ssm')
+
+
 """
 
-VERSION = '0.3.8'
+VERSION = '0.4.0'

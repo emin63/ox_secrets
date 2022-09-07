@@ -69,3 +69,43 @@ The following illustrates example usage:
             logging.warning('Ignoring loader_params in %s', cls.__name__)
         with cls._lock:
             return cls.load_secrets_data()
+
+    @classmethod
+    def store_secrets(cls, new_secret_dict: typing.Dict[str, str],
+                      category: str, **storage_params):
+        """Implement as required by parent class.
+        """
+        return cls.store_secrets_to_env(
+            new_secret_dict, category, **storage_params)
+
+    @classmethod
+    def store_secrets_to_env(cls, new_secret_dict: typing.Dict[str, str],
+                             category: str, prefix: str = 'OX_SECRETS'):
+        """Store secrets in environment variables.
+
+        :param new_secret_dict:  Dictionary of secrets to store.
+
+        :param category:str:     Category for storing secrets in env.
+
+        :param prefix='OX_SECRETS':  Prefix for environment variables to
+                                     intrepret as secrets. Anything of
+                                     the form {prefix}_{category}_{name} will
+                                     be stored.
+
+        ~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-
+
+        PURPOSE:  Store secrets in environment variables.  This is mainly
+                  only useful for testing since the secrets are effectively
+                  only stored in memory and get forgotten once the process
+                  exits.
+        """
+        if new_secret_dict:
+            logging.warning(
+                'Storing to env will be forgotten when pricess exits.')
+        with cls._lock:
+            if category not in cls._cache:
+                cls._cache[category] = {}
+            for name, value in new_secret_dict.items():
+                full_name = f'{prefix}_{category.upper()}_{name.upper()}'
+                os.environ[full_name] = value
+                cls._cache[category][name] = value
