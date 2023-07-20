@@ -40,7 +40,8 @@ class AWSSecretServer(common.SecretServer):
         session = boto3.Session(profile_name=profile_name, **kwargs)
         client = session.client(service_name=service_name)
         if service_name == 'secretsmanager':
-            get_secret_value_response = client.get_secret_value(SecretId=secret_id)
+            get_secret_value_response = client.get_secret_value(
+                SecretId=secret_id)
             secret_data = get_secret_value_response['SecretString']
             secret_dict = json.loads(secret_data)
         elif service_name == 'ssm':
