@@ -9,6 +9,7 @@ import logging
 import csv
 import os
 import typing
+import json
 
 from ox_secrets import settings
 from ox_secrets.core import common
@@ -19,13 +20,25 @@ class FileSecretServer(common.SecretServer):
     """
 
     @classmethod
-    def load_secrets_file(cls, filename=None, encoding='utf8'):
+    def load_secrets_file(cls, filename=None, encoding='utf8',
+                          file_type=None, default_category='root'):
         """Load secrets file from given filename.
 
         :param filename=None:    Optional filename for secrets. This
                                  defaults to ~/.ox_secrets.csv.
                                  It shall be a CSV file with header
-                                 category,name,value,notes.
+                                 category,name,value,notes. You can also
+                                 provide a .json file containing a dict
+                                 of name value pairs which will all go
+                                 in the default_category.
+
+        :param encoding='utf8':  Default encoding for opening files.
+
+        :param file_type:  Either .csv or .json or None if you want to
+                           select based on file extension.
+
+        :param default_category='root':  Category to use when cannot
+                                         otherwise find it.
 
         ~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-
 
@@ -36,14 +49,22 @@ class FileSecretServer(common.SecretServer):
             filename = os.environ.get(
                 'OX_SECRETS_FILE', settings.OX_SECRETS_FILE)
         logging.warning('Opening secrets file "%s"', filename)
-        with open(filename, 'r', encoding=encoding) as sfd:
-            reader = csv.DictReader(sfd)
-            with cls._lock:
-                for line in reader:
-                    if line['category'] not in cls._cache:
-                        cls._cache[line['category']] = {}
-                    cls._cache[line['category']][line['name']] = line[
-                        'value']
+        with cls._lock, open(filename, 'r', encoding=encoding) as sfd:
+            if file_type is None:
+                file_type = os.path.splitext(filename)[-1].lower()
+            if file_type == '.csv':
+                contents = list(csv.DictReader(sfd))
+            elif file_type == '.json':
+                contents = [{'name': k, 'value': v}
+                            for k, v in json.load(sfd).items()]
+            else:
+                raise ValueError(f'Cannot handle secrets {file_type=}')
+            for line in contents:
+                line_category = line.get('category', default_category)
+                if line_category not in cls._cache:
+                    cls._cache[line_category] = {}
+                cls._cache[line_category][line['name']] = line[
+                    'value']
 
     @classmethod
     def load_cache(cls, name: typing.Optional[str] = None,
@@ -51,9 +72,8 @@ class FileSecretServer(common.SecretServer):
                    loader_params: typing.Optional[dict] = None):
         "Implement loading cache from a file."
         loader_params = loader_params if loader_params is not None else {}
-        logging.debug('Ignoring name=%s/category=%s for %s', name,
-                      category, cls.__name__)
-        return cls.load_secrets_file(**loader_params)
+        return cls.load_secrets_file(default_category=category,
+                                     **loader_params)
 
     @classmethod
     def store_secrets(cls, new_secret_dict: typing.Dict[str, str],
