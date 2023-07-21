@@ -39,13 +39,16 @@ back-ends in case your secrets are split across various places.
 To get started, you can simply =pip install ox_secrets= as usual.
 
 #+COMMENT: The following is copied from /ox_secrets/__init__.py docs
+#+COMMENT: At some point we should use noweb or tangling to clean
+#+COMMENT: this up.
 
 The ox_secrets package provides a simple secret server with various
 back-ends. The following illustrates example usage.
 
-First we setup an example secrets file:
-
 #+BEGIN_SRC python
+
+# First we setup an example secrets file:
+
 >>> import os, tempfile, csv
 >>> fn = tempfile.mktemp(suffix='_ox_secrets.csv')
 >>> writer = csv.writer(open(fn, 'w')).writerows([
@@ -67,23 +70,23 @@ example_pw,alt,alt_unsecret_test_pw,alt secret test pw
 >>> oss.get_secret('example_name')
 'super_secret'
 
-Sometimes it is nice to be able to just pass a dictionary of
-credential information to get_secret:
+#  Sometimes it is nice to be able to just pass a dictionary of
+#  credential information to get_secret:
 
 >>> creds = {'name': 'example_name', 'category': 'root', 'server': 'fss'}
 >>> oss.get_secret(**creds)
 'super_secret'
 
-You can also puts secrets into the environment variables:
+#  You can also puts secrets into the environment variables:
 
 >>> os.environ['OX_SECRETS_ROOT_EXAMPLE_NAME'] = 'other'
 >>> oss.get_secret('example_name')
 'other'
 
-You can use the OX_SECRETS_CATEGORY_REGEXP and
-the OX_SECRETS_CATEGORY_REPLACE either in the settings file
-or environment variables (before starting python) to automatically
-switch from production to testing secrets:
+#  You can use the OX_SECRETS_CATEGORY_REGEXP and
+#  the OX_SECRETS_CATEGORY_REPLACE either in the settings file
+#  or environment variables (before starting python) to automatically
+#  switch from production to testing secrets:
 
 >>> oss.get_secret('example_pw', 'prod/data')
 'super_secret_pw'
@@ -94,35 +97,35 @@ switch from production to testing secrets:
 'unsecret_test_pw'
 
 
-If desired, you can also store secrets (assuming
-you have appropriate permissions):
+#  If desired, you can also store secrets (assuming
+#  you have appropriate permissions):
 
 >>> oss.store_secrets({'example_pw': 'foobar'}, category='alt')
 >>> oss.get_secret('example_pw', category='alt')
 'foobar'
 
-Now cleanup
+#  Now cleanup
 
 >>> os.remove(fn)
 
 
-If you have an account with the appropriate permissions (e.g.,
-you may need to set the AWS_PROFILE environment variable to
-to such an account), you can also store secrets and parameters
-to aws.
-
-For example, you could do something like:
-
-    oss.get_server(mode='aws').store_secrets(
-        {'test_storage':'foobar'}, category=AWS_SECRET_ID)
-
-to store a secret to the existing secret with secret ID
-`AWS_SECRET_ID` on Amazon Web Services. You could also proide the
-`service_name='ssm'` argument if you wanted to use the parameter store
-instead of the secret store via something like:
-
-    oss.get_server(mode='aws').store_secrets(
-        {'test_storage':'foobar', category=AWS_PARAM_NAME,
-        service_name='ssm')
+#  If you have an account with the appropriate permissions (e.g.,
+#  you may need to set the AWS_PROFILE environment variable to
+#  to such an account), you can also store secrets and parameters
+#  to aws.
+#  
+#  For example, you could do something like:
+#  
+#      oss.get_server(mode='aws').store_secrets(
+#          {'test_storage':'foobar'}, category=AWS_SECRET_ID)
+#  
+#  to store a secret to the existing secret with secret ID
+#  `AWS_SECRET_ID` on Amazon Web Services. You could also proide the
+#  `service_name='ssm'` argument if you wanted to use the parameter store
+#  instead of the secret store via something like:
+#  
+#      oss.get_server(mode='aws').store_secrets(
+#          {'test_storage':'foobar', category=AWS_PARAM_NAME,
+#          service_name='ssm')
 #+END_SRC
 
