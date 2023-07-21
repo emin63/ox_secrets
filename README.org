@@ -38,7 +38,9 @@ back-ends in case your secrets are split across various places.
 
 * Usage
 
-To get started, you can simply =pip install ox_secrets= as usual.
+To get started, you can simply =pip install ox_secrets= as usual and
+then see either the [[#usage-in-python][Usage in Python]] section for how to use in python
+or the [[#usage-in-command-line][Usage in Command Line]] for the CLI.
 
 ** Usage in Python
   :PROPERTIES:
@@ -143,7 +145,11 @@ example_pw,alt,alt_unsecret_test_pw,alt secret test pw
 #          service_name='ssm')
 #+END_SRC
 
-** Usage in Command Line Interface (CLI)
+** Usage in Command Line
+  :PROPERTIES:
+    :CUSTOM_ID: usage-in-command-line
+  :END:
+
 
 You can also use =ox_secrets= from the command line.
 
