@@ -40,14 +40,19 @@ back-ends in case your secrets are split across various places.
 
 To get started, you can simply =pip install ox_secrets= as usual.
 
+** Usage in Python
+  :PROPERTIES:
+    :CUSTOM_ID: usage-in-python
+  :END:
+
 #+COMMENT: The following is copied from /ox_secrets/__init__.py docs
 #+COMMENT: At some point we should use noweb or tangling to clean
 #+COMMENT: this up.
 
-The =ox_secrets= package provides a simple secret server with various
-back-ends. The following illustrates example usage.
-
 #+BEGIN_SRC python
+
+#The =ox_secrets= package provides a simple secret server with various
+#back-ends. The following illustrates example usage.
 
 # First we setup an example secrets file:
 
@@ -137,4 +142,21 @@ example_pw,alt,alt_unsecret_test_pw,alt secret test pw
 #          {'test_storage':'foobar', category=AWS_PARAM_NAME,
 #          service_name='ssm')
 #+END_SRC
+
+** Usage in Command Line Interface (CLI)
+
+You can also use =ox_secrets= from the command line.
+
+For example, if you setup a secrets file in =~/.ox_secrets.csv=
+similar to the example in the [[#usage-in-python][Usage in Python]] section, you can do
+something like
+
+#+BEGIN_SRC shell
+ox_secrets example_name --category root
+#+END_SRC
+
+to extract the desired secret.
+
+You can also pass other parameters (run =ox_secrets --help= for details).
+
 

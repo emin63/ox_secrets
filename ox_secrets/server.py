@@ -26,9 +26,10 @@ def get_server(mode: typing.Optional[str] = None) -> common.SecretServer:
     if mode == 'aws':
         # delayed import so boto3 does not need to be installed if
         # the aws secret server is never used
-        from ox_secrets.core import aws
+        from ox_secrets.core import aws  \
+            # pylint:disable=import-outside-toplevel
         return aws.AWSSecretServer
-    raise ValueError('Invalid secret server mode "{mode}"')
+    raise ValueError(f'Invalid secret server mode "{mode}"')
 
 
 def get_secret(name: str, category: str = 'root',
@@ -70,7 +71,7 @@ def get_secret_dict(
     """Lookup secret with given name and return it.
 
     :param mode=None:  Optional string mode for calling get_server.
-                      
+
     :param category='root':  Optional string category for secret
 
     :param allow_update=True:  Whether to loading cache if secret not
