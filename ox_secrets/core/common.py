@@ -34,7 +34,9 @@ class SecretServer:
 
         :param name:  String name of secret desired. Some back-ends can load
                       the cache for all secrets at once while others require
-                      the name and/or category.
+                      the name and/or category. You should be able to pass
+                      None for name to indicate loading everything for
+                      the given category.
 
         :param category:  String name of secret desired. Some back-ends can
                           load the cache for all secrets at once while others
@@ -104,9 +106,11 @@ class SecretServer:
                               passed to load_cache for back-end. This allows
                               a way to pass back-end specific info if desired.
 
-        :param service_name: Optional string to add as loader_params['service_name']. The
-                             service_name is used by the AWS secret manager and parameter
-                             store and nice to be able to specify directly.
+        :param service_name: Optional string to add as
+                             loader_params['service_name']. The
+                             service_name is used by the AWS secret manager
+                             and parameter store and nice to be able to
+                             specify directly.
 
         ~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-
 
@@ -121,26 +125,103 @@ class SecretServer:
         result = cls.secret_from_env(name, category, allow_env)
         if result is not None:
             return result
-        with cls._lock:  # get the lock to prevent multiple read/write cache
-            cdict = cls._cache.get(category, None)
-            if cdict is not None:
+        with cls._lock:
+            cdict = cls._cache.get(category, {})
+            if name in cdict:
                 return cdict[name]
-        assert cdict is None  # must be here if category not in cache
-        if allow_update:
-            if service_name is not None:
-                if loader_params is None:
-                    loader_params = {}
-                loader_params['service_name'] = service_name
-            cls.load_cache(name=name, category=category,
-                           loader_params=loader_params)
-            return cls.get_secret(
-                name, category,
-                allow_env=False,  # already tried env, so don't retry
-                allow_update=False,  # don't get into infinite loop
-                loader_params=loader_params)
-        logging.error('Unable to find category %s for secret manager class %s',
-                      category, cls.__name__)
-        raise KeyError(category)
+            # Secret not found so clear cache to rebuild
+            cls._cache[category] = None
+            del cls._cache[category]
+        cls._prepare_secrets_dict(category, allow_update,
+                                  loader_params, service_name)
+
+        with cls._lock:  # must lock since cdict may refernce cls._cdict
+            cdict = cls._cache[category]
+            return cdict[name]
+
+    @classmethod
+    def get_secret_dict(cls, category: str = 'root',
+                        allow_update: bool = True,
+                        loader_params: typing.Optional[dict] = None,
+                        service_name: typing.Optional[str] = None):
+        """Lookup secret with given name and return it.
+
+        :param category='root':  Optional string category for secret
+
+        :param allow_update=True:  Whether to loading cache if secret not
+                                   found.
+
+        :param loader_params: Optional dict of parameters which gets
+                              passed to load_cache for back-end. This allows
+                              a way to pass back-end specific info if desired.
+
+        :param service_name: Optional string to add as
+                             loader_params['service_name']. The service_name
+                              is used by the AWS secret manager and parameter
+                             store and nice to be able to specify directly.
+
+        ~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-
+
+        :return:   Value of secret.
+
+        ~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-
+
+        PURPOSE:   Simple way to lookup secrets.
+
+        """
+        category = cls.maybe_replace_category(category)
+        cls._prepare_secrets_dict(category, allow_update, loader_params,
+                                  service_name)
+        with cls._lock:
+            return dict(cls._cache[category])  # return shallow copy
+
+    @classmethod
+    def _prepare_secrets_dict(
+            cls, category: str, allow_update: bool,
+            loader_params: typing.Optional[dict] = None,
+            service_name: typing.Optional[str] = None):
+        """Help prepare secrets in cls._cache for get_secret and get_secret.
+
+        :param category:  String category for secrets.
+
+        :param allow_update=True:  Whether to loading cache if secret not
+                                   found.
+
+        :param loader_params: Optional dict of parameters which gets
+                              passed to load_cache for back-end. This allows
+                              a way to pass back-end specific info if desired.
+
+        :param service_name: Optional string to add as
+                             loader_params['service_name']. The service_name
+                              is used by the AWS secret manager and parameter
+                             store and nice to be able to specify directly.
+
+        ~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-
+
+        PURPOSE:   This is a helper function to only be called by
+                   get_secret and get_secret_dict. If cls._cache[category]
+                   is non-empty, then this does nothign since we assume
+                   we already have secrets loaded
+
+        """
+
+        if cls._cache.get(category):  # have something so no need to reload
+            return
+        if not allow_update:
+            with cls._lock:
+                cdict = cls._cache.get(category, None)
+                if cdict is not None:   # did have something there
+                    return              # so stop processing
+                logging.error(          # otherwise indicate an error
+                    'Unable to find category %s for secret manager class %s',
+                    category, cls.__name__)
+                raise KeyError(category)  # no data and no update allowed
+        if service_name is not None:
+            if loader_params is None:
+                loader_params = {}
+            loader_params['service_name'] = service_name
+        cls.load_cache(name=None, category=category,
+                       loader_params=loader_params)
 
     @staticmethod
     def maybe_replace_category(category):
@@ -152,7 +233,6 @@ Meant to be called by get_secret.
             return re.sub(settings.OX_SECRETS_CATEGORY_REGEXP,
                           settings.OX_SECRETS_CATEGORY_REPLACE, category)
         return category
-
 
     @classmethod
     def list_secret_names(cls, category: str) -> typing.List[str]:
