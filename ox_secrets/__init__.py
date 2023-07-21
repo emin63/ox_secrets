@@ -20,11 +20,18 @@ example_pw,prod/data,super_secret_pw,example secret_pw
 example_pw,test/data,unsecret_test_pw,example secret test pw
 example_pw,alt,alt_unsecret_test_pw,alt secret test pw
 
+Now that we have a secrets file, we can read some secrets:
+
 >>> from ox_secrets import settings, server as oss
 >>> oss.settings.OX_SECRETS_FILE = fn # default is ~/.ox_secrets.csv
 >>> oss.forget_secrets()  # Clear it to make sure we start fresh
 >>> oss.get_secret('example_name')
 'super_secret'
+
+We can also get a dictionary of all the secrets for a given category:
+
+>>> oss.get_secret_dict(category='test/data')
+{'example_pw': 'unsecret_test_pw'}
 
 Sometimes it is nice to be able to just pass a dictionary of
 credential information to get_secret:
