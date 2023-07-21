@@ -3,7 +3,7 @@
 This module provides a secret server using the AWS system.
 """
 
-
+import os
 import logging
 import typing
 import json
@@ -31,6 +31,8 @@ class AWSSecretServer(common.SecretServer):
                 str] = None, **kwargs) -> typing.Dict[str, str]:
         """Helper to load given secret_id from AWS.
         """
+        storage = kwargs.pop('storage', os.path.splitext(
+            secret_id)[-1]).lower().lstrip('.')
         if profile_name is None:
             profile_name = settings.OX_SECRETS_AWS_PROFILE_NAME
         logging.warning(
@@ -43,16 +45,19 @@ class AWSSecretServer(common.SecretServer):
             get_secret_value_response = client.get_secret_value(
                 SecretId=secret_id)
             secret_data = get_secret_value_response['SecretString']
-            secret_dict = json.loads(secret_data)
         elif service_name == 'ssm':
             get_secret_value_response = client.get_parameter(Name=secret_id)
             secret_data = get_secret_value_response['Parameter']['Value']
-            if secret_id[-5:].lower() == '.json':
-                secret_dict = json.loads(secret_data)
-            else:
-                secret_dict = {secret_id: secret_data}
         else:
             raise ValueError(f'Invalid service_name: {service_name}')
+
+        if storage == 'json':
+            secret_dict = json.loads(secret_data)
+        else:
+            if storage != 'raw':
+                logging.warning('Intpereting unknown storage as raw.')
+            secret_dict = {secret_id: secret_data}
+
         return secret_dict
 
     @classmethod

@@ -52,7 +52,9 @@ class FileSecretServer(common.SecretServer):
         with cls._lock, open(filename, 'r', encoding=encoding) as sfd:
             if file_type is None:
                 file_type = os.path.splitext(filename)[-1].lower()
-            if file_type == '.csv':
+            elif file_type == '.raw':
+                contents = [{'name': default_category, 'value': sfd.read()}]
+            elif file_type == '.csv':
                 contents = list(csv.DictReader(sfd))
             elif file_type == '.json':
                 contents = [{'name': k, 'value': v}
