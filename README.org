@@ -70,6 +70,13 @@ example_pw,alt,alt_unsecret_test_pw,alt secret test pw
 >>> oss.get_secret('example_name')
 'super_secret'
 
+#  We can also get a dictionary of all the secrets for a given category:
+
+>>> oss.get_secret_dict(category='test/data')
+{'example_pw': 'unsecret_test_pw'}
+
+
+
 #  Sometimes it is nice to be able to just pass a dictionary of
 #  credential information to get_secret:
 
