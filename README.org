@@ -1,4 +1,6 @@
 
+#+OPTIONS: ^:{}
+
 * Introduction
 
 The =ox_secrets= package provides a simple secret manager for
@@ -42,7 +44,7 @@ To get started, you can simply =pip install ox_secrets= as usual.
 #+COMMENT: At some point we should use noweb or tangling to clean
 #+COMMENT: this up.
 
-The ox_secrets package provides a simple secret server with various
+The =ox_secrets= package provides a simple secret server with various
 back-ends. The following illustrates example usage.
 
 #+BEGIN_SRC python
