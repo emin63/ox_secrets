@@ -61,6 +61,45 @@ def get_secret(name: str, category: str = 'root',
     return result
 
 
+def get_secret_dict(
+        mode: typing.Optional[str] = None, category: str = 'root',
+        allow_update: bool = True,
+        loader_params: typing.Optional[dict] = None,
+        service_name: typing.Optional[str] = None) -> typing.Dict[
+            str, typing.Any]:
+    """Lookup secret with given name and return it.
+
+    :param mode=None:  Optional string mode for calling get_server.
+                      
+    :param category='root':  Optional string category for secret
+
+    :param allow_update=True:  Whether to loading cache if secret not
+                               found.
+
+    :param loader_params: Optional dict of parameters which gets
+                          passed to load_cache for back-end. This allows
+                          a way to pass back-end specific info if desired.
+
+    :param service_name: Optional string to add as
+                         loader_params['service_name']. The service_name
+                          is used by the AWS secret manager and parameter
+                         store and nice to be able to specify directly.
+
+    ~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-
+
+    :return:   Dictionary of secrets for given category.
+
+    ~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-
+
+    PURPOSE:   Simple way to lookup dictionary of secrets.
+
+    """
+    server = get_server(mode=mode)
+    return server.get_secret_dict(
+        category=category, allow_update=allow_update,
+        loader_params=loader_params, service_name=service_name)
+
+
 def forget_secrets(server: common.SecretServer = None) -> str:
     """Forget all secrets.
     """
