@@ -60,7 +60,8 @@ class FileSecretServer(common.SecretServer):
                 contents = [{'name': k, 'value': v}
                             for k, v in json.load(sfd).items()]
             else:
-                raise ValueError(f'Cannot handle secrets {file_type=}')
+                raise ValueError(
+                    f'Cannot handle secrets file_type={file_type}')
             for line in contents:
                 line_category = line.get('category', default_category)
                 if line_category not in cls._cache:
