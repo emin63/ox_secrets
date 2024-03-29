@@ -33,6 +33,13 @@ We can also get a dictionary of all the secrets for a given category:
 >>> oss.get_secret_dict(category='test/data')
 {'example_pw': 'unsecret_test_pw'}
 
+We can also setup our environment variables from a secret dictionary
+using the setup_env_from_secrets for a given secret server:
+
+>>> oss.get_server().setup_env_from_secrets(category='test/data')
+>>> os.environ['example_pw']
+'unsecret_test_pw'
+
 Sometimes it is nice to be able to just pass a dictionary of
 credential information to get_secret:
 
@@ -94,5 +101,5 @@ instead of the secret store via something like:
 
 """
 
-VERSION = '0.5.5'
+VERSION = '0.5.6'
 __version__ = VERSION

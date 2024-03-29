@@ -3,6 +3,7 @@
 This module provides a common core for secret servers.
 """
 
+import datetime
 import logging
 import os
 import threading
@@ -174,6 +175,56 @@ class SecretServer:
                                   service_name)
         with cls._lock:
             return dict(cls._cache[category])  # return shallow copy
+
+    @classmethod
+    def setup_env_from_secrets(cls, category, *args,
+                               param_names=None,
+                               log_env_var='{category}__RESULTS',
+                               **kwargs):
+        """Setup environment variables from secrets.
+
+        :param category:    String category to use to lookup secret dict.
+
+        :param *args:   As for `get_secret_dict`.
+
+        :param param_names=None:   Optional list of strings indicating
+                                   parameter names to set. If None, then
+                                   we set everything in the secret dict.
+
+        :param log_env_var='{category}__RESULTS':   Name of environment
+                                                    variable to set with
+                                                    log info.
+
+        :param **kwargs:    Passed to `get_secret_dict`.
+
+        ~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-
+
+        PURPOSE:  Call `get_secret_dict` and then set `param_names` as
+                  environment variables.
+
+        """
+        log_env_var = log_env_var.format(category=category)
+        if os.environ.get(log_env_var, None) is not None:
+            raise ValueError(f'Refusing to setup category {category}' +
+                             f' already setup as {log_env_var}=' +
+                             os.environ[log_env_var])
+        info = cls.get_secret_dict(category, *args, **kwargs)
+        param_names = param_names if param_names is not None else list(info)
+        action_list = []        
+        for name in param_names:
+            old = os.environ.get(name, None)
+            if old == info[name]:
+                logging.info('%s set; no reset from %s', name, category)
+                continue
+            elif old is not None:
+                logging.warning('Overwriting %s via %s', name, category)
+            os.environ[name] = str(info[name])
+            logging.info('Set %s via %s', name, category)
+            action_list.append(f'SET_{name}')
+        os.environ[log_env_var] = (f'SET_{category}__AT__' + (
+            datetime.datetime.utcnow().strftime('%Y-%m-%dT%H-%M-%S')) +
+                                   '__' + '_'.join(action_list))
+        logging.info('Set env var %s to log setup', log_env_var)
 
     @classmethod
     def _prepare_secrets_dict(
