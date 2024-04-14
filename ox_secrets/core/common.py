@@ -180,7 +180,7 @@ class SecretServer:
     def setup_env_from_secrets(cls, category, *args,
                                param_names=None,
                                log_env_var='{category}__RESULTS',
-                               **kwargs):
+                               resetup: str = 'duplicate', **kwargs):
         """Setup environment variables from secrets.
 
         :param category:    String category to use to lookup secret dict.
@@ -195,6 +195,13 @@ class SecretServer:
                                                     variable to set with
                                                     log info.
 
+        :param resetup:  What to do if we are redoing the setup. If 'strict',
+                         then calling this method twice is not allowed. If
+                         'duplicate', then allow calling multiple times provided
+                         we are just setting up the same values again (but no
+                         changing values allowed). If 'overwrite', then allow
+                         overwriting old values.
+
         :param **kwargs:    Passed to `get_secret_dict`.
 
         ~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-
@@ -203,21 +210,35 @@ class SecretServer:
                   environment variables.
 
         """
+        assert resetup in {'duplicate', 'strict', 'ovewrite'}, (
+            'Invalid value {resetup} for "resetup"')
         log_env_var = log_env_var.format(category=category)
         if os.environ.get(log_env_var, None) is not None:
-            raise ValueError(f'Refusing to setup category {category}' +
-                             f' already setup as {log_env_var}=' +
-                             os.environ[log_env_var])
+            if resetup == 'strict':
+                raise ValueError(
+                    'Since resetup=strict, refusing to setup' +
+                    f' category {category} already setup as {log_env_var}=' +
+                    os.environ[log_env_var])
+            logging.warning('Doing resetup of category %s via %s=%s',
+                            category, log_env_var, os.environ[log_env_var])
         info = cls.get_secret_dict(category, *args, **kwargs)
         param_names = param_names if param_names is not None else list(info)
-        action_list = []        
+        action_list = []
         for name in param_names:
             old = os.environ.get(name, None)
-            if old == info[name]:
-                logging.info('%s set; no reset from %s', name, category)
+            if old is None:
+                logging.warning('No value provide for %s; skipping', name)
                 continue
-            elif old is not None:
-                logging.warning('Overwriting %s via %s', name, category)
+            if old == str(info[name]):
+                logging.info('%s set; no reset from %s since unchanged',
+                             name, category)
+                continue
+            if resetup == 'overwrite':
+                logging.warning('Overwriting %s to new value via %s',
+                                name, category)
+            else:
+                raise ValueError(f'Refuse overwrite {name} from {category}'
+                                 f' since resetup={resetup}')
             os.environ[name] = str(info[name])
             logging.info('Set %s via %s', name, category)
             action_list.append(f'SET_{name}')
