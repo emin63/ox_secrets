@@ -225,20 +225,21 @@ class SecretServer:
         param_names = param_names if param_names is not None else list(info)
         action_list = []
         for name in param_names:
-            old = os.environ.get(name, None)
-            if old is None:
+            if info.get(name, None) is None:
                 logging.warning('No value provide for %s; skipping', name)
                 continue
-            if old == str(info[name]):
-                logging.info('%s set; no reset from %s since unchanged',
-                             name, category)
-                continue
-            if resetup == 'overwrite':
-                logging.warning('Overwriting %s to new value via %s',
-                                name, category)
-            else:
-                raise ValueError(f'Refuse overwrite {name} from {category}'
-                                 f' since resetup={resetup}')
+            old = os.environ.get(name, None)
+            if old is not None:
+                if old == str(info[name]):
+                    logging.info('%s set; no reset from %s since unchanged',
+                                 name, category)
+                    continue
+                if resetup == 'overwrite':
+                    logging.warning('Overwriting %s to new value via %s',
+                                    name, category)
+                else:
+                    raise ValueError(f'Refuse overwrite {name} from {category}'
+                                     f' since resetup={resetup}')
             os.environ[name] = str(info[name])
             logging.info('Set %s via %s', name, category)
             action_list.append(f'SET_{name}')
