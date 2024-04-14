@@ -101,5 +101,5 @@ instead of the secret store via something like:
 
 """
 
-VERSION = '0.5.6'
+VERSION = '0.5.7'
 __version__ = VERSION
