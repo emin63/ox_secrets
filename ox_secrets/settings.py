@@ -13,7 +13,8 @@ OX_SECRETS_MODE = os.environ.get('OX_SECRETS_MODE', 'FILE')
 # override either with environment variable OX_SECRETS_FILE
 # or by changing below at run-time.
 OX_SECRETS_FILE = os.path.join(os.environ.get(
-    'OX_SECRETS_FILE', os.environ.get('HOME', '/')), '.ox_secrets.csv')
+    'OX_SECRETS_FILE', os.environ.get('HOME', os.environ.get(
+        'HOMEPATH', '/'))), '.ox_secrets.csv')
 
 
 # Used for the aws secrets manager. Specifies the profile name in your ~/.aws.
